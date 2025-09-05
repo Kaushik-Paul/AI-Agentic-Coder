@@ -1,0 +1,48 @@
+[project]
+name = "ai_agentic_coder"
+version = "0.1.0"
+description = "ai_agentic_coder using crewAI"
+authors = [{ name = "Kaushik Paul", email = "kaushik.paul755@gmail.com" }]
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "crewai[tools]>=0.108.0,<1.0.0",
+    "mailjet-rest>=1.5.1",
+    "autogen-agentchat>=0.4.9.2",
+    "autogen-ext[grpc,mcp,ollama,openai]>=0.4.9.2",
+    "bs4>=0.0.2",
+    "gradio>=5.22.0",
+    "httpx>=0.28.1",
+    "ipywidgets>=8.1.5",
+    "langsmith>=0.3.18",
+    "lxml>=5.3.1",
+    "mcp-server-fetch>=2025.1.17",
+    "mcp[cli]>=1.5.0",
+    "playwright>=1.51.0",
+    "plotly>=6.0.1",
+    "polygon-api-client>=1.14.5",
+    "psutil>=7.0.0",
+    "pypdf>=5.4.0",
+    "pypdf2>=3.0.1",
+    "python-dotenv>=1.0.1",
+    "requests>=2.32.3",
+    "semantic-kernel>=1.25.0",
+    "sendgrid>=6.11.0",
+    "setuptools>=78.1.0",
+    "smithery>=0.1.0",
+    "boto3",
+    "google-cloud-storage",
+]
+
+[project.scripts]
+stock_picker = "ai_agentic_coder.main:run"
+run_crew = "ai_agentic_coder.main:run"
+train = "ai_agentic_coder.main:train"
+replay = "ai_agentic_coder.main:replay"
+test = "ai_agentic_coder.main:test"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"
