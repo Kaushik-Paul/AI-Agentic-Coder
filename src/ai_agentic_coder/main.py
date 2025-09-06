@@ -24,4 +24,4 @@ except ImportError:
 
 if __name__ == "__main__":
     ai_agentic_coder = create_interface()
-    ai_agentic_coder.launch(server_port=8250)
+    ai_agentic_coder.launch()
