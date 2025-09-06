@@ -34,16 +34,22 @@ class PythonCodeRunTool(BaseTool):
         local_file_name = bucket_file_name + ".zip"
         output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../output"))
 
+        # Create a zip file of the output directory
         shutil.make_archive(bucket_file_name, format="zip", root_dir=output_dir)
 
         service_key = json.loads(base64.b64decode(gcp_service_key).decode('utf-8'))
         creds = service_account.Credentials.from_service_account_info(service_key)
 
+        # Initialize the GCP client
         client = storage.Client(project=project_id, credentials=creds)
         bucket = client.get_bucket(bucket_name)
         blob = bucket.blob(bucket_file_name)
         blob.upload_from_filename(local_file_name)
 
+        # Delete the temporary zip file after uploading
+        os.remove(local_file_name)
+
+        # Get the signed URL for the uploaded file
         signed_url = blob.generate_signed_url(
             version="v4",
             method="GET",
@@ -139,6 +145,6 @@ class PythonCodeRunTool(BaseTool):
         except Exception:
             pass
 
-        return_urls = f"OUTPUT FILE DOWNLOAD URL: {signed_url}, PUBLIC GRADIO URL: {public_url}"
+        return_urls = f"OUTPUT FILE DOWNLOAD URL: {signed_url}, \nPUBLIC GRADIO URL: {public_url}"
 
         return return_urls
