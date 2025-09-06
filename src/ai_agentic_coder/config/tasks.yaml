@@ -51,9 +51,11 @@ test_task:
 
 python_code_run_task:
   description: >  
-    Run the python code that was generated and return the output using the tool that is provided
+    Upload the zip to google cloud storage and run the python code that was generated
   expected_output: >
-    The public url returned after running the tool
+    Signed public url of the zip that is uploaded in google cloud storage and the public url of gradle url 
+    that is started returned after running the tool.
+    IMPORTANT: tool returns both the url, so just return the output returned by the tool, without any additional text or formatting.
   agent: python_code_runner
   context:
     - code_task
