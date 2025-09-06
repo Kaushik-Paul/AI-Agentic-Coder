@@ -383,10 +383,10 @@ $RECYCLE.BIN/
 # Self temporary files
 ignore.txt
 
-# End of https://www.toptal.com/developers/gitignore/api/pycharm+all,visualstudiocode,python,windows,linux,macos
-
 /src/ai_agentic_coder/output/accounts.py
 /src/ai_agentic_coder/output/accounts.py_design.md
 /src/ai_agentic_coder/output/app.py
 /src/ai_agentic_coder/output/gradio_public_url.txt
 /src/ai_agentic_coder/output/test_accounts.py
+/src/ai_agentic_coder/.gradio/
+/src/ai_agentic_coder/output/
