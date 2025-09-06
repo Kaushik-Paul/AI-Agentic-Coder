@@ -2,6 +2,7 @@
 import warnings
 import os
 import subprocess
+import time
 import gradio as gr
 from dotenv import load_dotenv
 
@@ -98,7 +99,11 @@ def create_interface():
                         value=""
                     )
                 
-                run_btn = gr.Button("Run CrewAI", variant="primary")
+                run_btn = gr.Button(
+                    "Run AI Coder",
+                    variant="primary",
+                    elem_id="run-btn"
+                )
             
             # Right column - Example
             with gr.Column(scale=1):
@@ -111,7 +116,7 @@ def create_interface():
                 **Example will load:**
                 - Trading account management system
                 - Module: `accounts.py`
-                - Class: `TradingAccount`
+                - Class: `Account`
                 
                 **Note:** All code will be generated in Python 3.x
                 """)
@@ -122,7 +127,25 @@ def create_interface():
                 label="Output",
                 interactive=False,
                 lines=20,
-                show_copy_button=True
+                show_copy_button=True,
+                elem_classes=["card"]
+            )
+        
+        # Hidden URL fields (shown after task completion)
+        with gr.Row():
+            download_url_box = gr.Textbox(
+                label="Download URL",
+                interactive=False,
+                visible=False,
+                show_copy_button=True,
+                elem_classes=["card"]
+            )
+            live_url_box = gr.Textbox(
+                label="Live App URL",
+                interactive=False,
+                visible=False,
+                show_copy_button=True,
+                elem_classes=["card"]
             )
         
         # Button click handlers
@@ -140,43 +163,68 @@ def create_interface():
         
         # Function to handle run button state
         def run_crew_wrapper(requirements, module_name, class_name):
-            # Create a progress instance
             progress = gr.Progress()
-            progress(0.1, desc="Starting...")
+            progress(0.01, desc="Starting...")
             
-            try:
-                # Call the main function with progress updates
-                result = run_crew(requirements, module_name, class_name, progress)
-                progress(1.0, desc="Completed!")
-                return result
-            except Exception as e:
-                progress(1.0, desc=f"Error: {str(e)}")
-                raise
+            # Simulate gradual progress up to 95% over ~5 minutes while crew runs
+            total_secs = 300
+            step_secs = total_secs / 95
+            
+            def simulate_progress():
+                for pct in range(1, 96):
+                    time.sleep(step_secs)
+                    progress(pct / 100, desc=f"Processing... {pct}%")
+            
+            # Run progress simulation in parallel thread
+            import threading
+            sim_thread = threading.Thread(target=simulate_progress, daemon=True)
+            sim_thread.start()
+            
+            # Run the heavy task
+            raw_output = run_crew(requirements, module_name, class_name, progress)
+            
+            # Ensure simulation finishes
+            sim_thread.join(0)
+            
+            # Parse URLs from raw_output (expecting after "Task completed!\n\n")
+            summary_lines = raw_output.split("\n\n", 1)
+            summary_text = summary_lines[0]
+            urls_text = summary_lines[1] if len(summary_lines) > 1 else ""
+            links = [u.strip() for u in urls_text.split(',') if u.strip()]
+            download_url = links[0] if links else ""
+            live_url = links[1] if len(links) > 1 else ""
+            
+            progress(1.0, desc="Completed!")
+            
+            # Show URL boxes now
+            return (
+                raw_output,
+                gr.Textbox.update(value=download_url, visible=True),
+                gr.Textbox.update(value=live_url, visible=True)
+            )
         
-        # Store the original click handler
         click_event = run_btn.click(
             fn=run_crew_wrapper,
             inputs=[requirements, module_name, class_name],
-            outputs=output,
+            outputs=[output, download_url_box, live_url_box],
             show_progress=True,
             api_name="run_crew"
         )
         
-        # Add CSS for button state
         demo.css = """
-        #run-btn:disabled {
-            cursor: not-allowed !important;
-            opacity: 0.7 !important;
-        }
+        body{background:#f4f6f9;font-family:Inter,Helvetica,Arial,sans-serif;}
+        .card{border:1px solid #e0e0e0;border-radius:8px;padding:10px;background:white;box-shadow:0 2px 5px rgba(0,0,0,0.05);}        
+        #run-btn{background:#0066ff;color:white;padding:12px 24px;font-size:16px;border-radius:6px;border:none;transition:background .3s ease;}        
+        #run-btn:disabled{cursor:not-allowed!important;opacity:.6!important;background:#6c89c9!important;}        
+        #run-btn:hover:not(:disabled){background:#0056d1;}
         """
         
         # Add JavaScript to handle button state using gr.HTML
         js_code = """
         <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const runBtn = document.querySelector('button[data-testid="Run CrewAI"]');
+            const runBtn = document.getElementById('run-btn');
             if (runBtn) {
-                runBtn.id = 'run-btn';
                 runBtn.addEventListener('click', function() {
                     this.disabled = true;
                     this.style.cursor = 'not-allowed';
