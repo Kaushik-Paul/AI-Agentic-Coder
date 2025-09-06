@@ -1,0 +1,35 @@
+# Hugging Face Hub ignore rules
+# Anything matching these patterns will NOT be uploaded when running `gradio deploy` or `huggingface_hub` commands.
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Python caches & compiled files ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Test data & large binary files (e.g., pyarrow test parquet) ---
+*.parquet
+pyarrow/tests/
+
+# --- Build artifacts ---
+build/
+dist/
+*.egg-info/
+
+# --- IDE folders ---
+.idea/
+.vscode/
+
+# --- Gradio & output directories ---
+/src/ai_agentic_coder/.gradio/
+/src/ai_agentic_coder/output/
+/.gradio/
+
+# --- Logs & temp files ---
+*.log
+*.tmp
