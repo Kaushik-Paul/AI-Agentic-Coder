@@ -391,3 +391,6 @@ ignore.txt
 /src/ai_agentic_coder/.gradio/
 /src/ai_agentic_coder/output/
 /.gradio/
+
+# Virtual Environment
+.venv/
