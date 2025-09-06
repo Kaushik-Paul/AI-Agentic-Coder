@@ -145,6 +145,6 @@ class PythonCodeRunTool(BaseTool):
         except Exception:
             pass
 
-        return_urls = f"OUTPUT FILE DOWNLOAD URL: {signed_url}, \nPUBLIC GRADIO URL: {public_url}"
+        return_urls = f"{signed_url}, {public_url}"
 
         return return_urls
