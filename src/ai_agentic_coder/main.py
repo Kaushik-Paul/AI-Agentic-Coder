@@ -9,7 +9,6 @@ from src.ai_agentic_coder.gradio_ui import create_interface
 # Load environment variables
 load_dotenv(override=True)
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
-os.makedirs('output', exist_ok=True)
 
 try:
     if not getattr(_CrewaiAgent, "_patched_skip_docker_validation", False):
@@ -22,6 +21,15 @@ try:
 except ImportError:
     pass
 
+def is_running_in_hf_space() -> bool:
+    """Returns True if running in a Hugging Face Space, False otherwise."""
+    return os.environ.get("SPACES_APP_SEAL", "").lower() == "true"
+
 if __name__ == "__main__":
+    if is_running_in_hf_space():
+        print("RUNNING IS HUGGING SPACE")
+    else:
+        print("RUNNING IS LOCAL")
+
     ai_agentic_coder = create_interface()
     ai_agentic_coder.launch()
