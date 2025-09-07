@@ -109,7 +109,7 @@ def run_crew_wrapper(requirements, module_name, class_name):
     # Extract and validate URLs strictly (avoid putting random text into URL boxes)
     rough_urls = re.findall(r"https?://[^\s\"'<>]+", raw_output)
     cleaned_urls = [u.rstrip(".,);]") for u in rough_urls]
-    valid_urls = [u for u in cleaned_urls if re.match(r"^https?://[A-Za-z0-9.-]+(?::\d+)?(?:/\S*)?$", u)]
+    valid_urls = [u for u in cleaned_urls if re.match(r"^https?://(?:[A-Za-z0-9.-]+|localhost|(?:\d{1,3}\.){3}\d{1,3})(?::\d+)?(?:/\S*)?$", u)]
 
     if failure_like or len(valid_urls) == 0:
         final_output = f"❌ Error: {raw_output.strip()}"

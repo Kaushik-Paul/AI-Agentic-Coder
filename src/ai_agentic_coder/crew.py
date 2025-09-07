@@ -1,7 +1,16 @@
+import os
+
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 
 from .tools.python_code_run_tool import PythonCodeRunTool
+
+def is_running_in_hf_space() -> bool:
+    """Returns True if running in a Hugging Face Space."""
+    return os.environ.get("SPACE_ID") is not None
+
+# If running in Hugging Face Space, then do not run code execution in docker
+run_in_docker = "unsafe" if is_running_in_hf_space() else "safe"
 
 
 @CrewBase
@@ -24,6 +33,7 @@ class EngineeringTeam():
             config=self.agents_config['backend_engineer'],
             verbose=True,
             allow_code_execution=True,
+            code_execution_mode=run_in_docker,
             max_execution_time=500, 
             max_retry_limit=3 
         )
@@ -41,6 +51,7 @@ class EngineeringTeam():
             config=self.agents_config['test_engineer'],
             verbose=True,
             allow_code_execution=True,
+            code_execution_mode=run_in_docker,
             max_execution_time=500, 
             max_retry_limit=3 
         )
