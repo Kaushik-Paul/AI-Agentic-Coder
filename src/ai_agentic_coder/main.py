@@ -22,8 +22,8 @@ except ImportError:
     pass
 
 def is_running_in_hf_space() -> bool:
-    """Returns True if running in a Hugging Face Space, False otherwise."""
-    return os.environ.get("SPACES_APP_SEAL", "").lower() == "true"
+    """Returns True if running in a Hugging Face Space."""
+    return os.environ.get("SPACE_ID") is not None
 
 if __name__ == "__main__":
     if is_running_in_hf_space():
