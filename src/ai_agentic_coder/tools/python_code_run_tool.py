@@ -137,7 +137,7 @@ class PythonCodeRunTool(BaseTool):
             public_url = local_url
 
         if not public_url:
-            return "Gradio started but no accessible URL was detected within 60 seconds."
+            public_url = "http://127.0.0.1:7860/"
 
         # Close our copy of stdout; the app keeps running detached.
         try:
