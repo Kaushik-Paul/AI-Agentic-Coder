@@ -14,7 +14,7 @@ Backed by a multi-agent CrewAI pipeline, the app coordinates “engineering lead
 
 ## Features
 - **Idea → Running App in Minutes**
-  - One-click pipeline: design the module → implement code → generate tests → scaffold a Gradio demo → launch and return live/public URLs.
+  - One-click pipeline: design the module → implement code → generate tests → scaffold a Gradio demo → auto-package into a zip → upload to Google Cloud Storage → launch the app → return live/public URLs.
 - **Multi‑Agent Orchestration (CrewAI)**
   - Specialized agents for engineering lead, backend, frontend, QA, and runtime. Tasks are declared in YAML and executed sequentially for predictable outcomes.
 - **Production‑Friendly Reliability**
@@ -24,7 +24,7 @@ Backed by a multi-agent CrewAI pipeline, the app coordinates “engineering lead
 - **Modern Developer UX**
   - Polished Gradio UI with non‑blocking background execution, streaming progress, one‑click example loader, and strict URL extraction/validation on completion.
 - **Secure Artifact Delivery**
-  - Packages outputs, uploads to Google Cloud Storage, and returns short‑lived signed URLs—no secrets in code, environment‑based configuration.
+  - Packages all generated code and dependencies into a zip file, uploads to Google Cloud Storage, and returns a time-limited, signed download URL. The app is automatically launched in a background process, and its public URL is captured and returned—no manual builds or deployments needed.
 - **Extensible & Maintainable**
   - Add agents, tasks, or custom tools (e.g., `python_code_run_tool.py`) without touching the core pipeline. Everything is declarative and composable.
 - **Runs Local or in the Cloud**
