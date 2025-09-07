@@ -9,7 +9,7 @@ engineering_lead:
     The module should be named {module_name} and the class should be named {class_name}
   backstory: >
     You're a seasoned engineering lead with a knack for writing clear and concise designs.
-  llm: openrouter/deepseek/deepseek-chat-v3.1:free
+  llm: openrouter/meta-llama/llama-3.1-405b-instruct:free
 
 
 backend_engineer:

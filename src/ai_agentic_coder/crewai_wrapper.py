@@ -73,7 +73,7 @@ def run_crew_wrapper(requirements, module_name, class_name):
         pct = min(95, max(1, int((elapsed / total) * 95)))
         if pct != last_pct:
             # Overlay progress and textual progress in output box
-            progress(pct / 100.0, desc=f"AI is running hard ({pct}%)")
+            progress(pct / 100.0, desc=f"AI is running hard")
             last_pct = pct
             bar_len = 24
             filled = int(bar_len * pct / 100)

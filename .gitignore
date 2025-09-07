@@ -389,7 +389,6 @@ ignore.txt
 /src/ai_agentic_coder/output/gradio_public_url.txt
 /src/ai_agentic_coder/output/test_accounts.py
 /src/ai_agentic_coder/.gradio/
-/src/ai_agentic_coder/output/
 /.gradio/
 
 # Virtual Environment
