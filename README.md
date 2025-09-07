@@ -52,6 +52,7 @@ Backed by a multi-agent CrewAI pipeline, the app coordinates “engineering lead
 - Python 3.10–3.12 (project targets >=3.10 per `pyproject.toml`)
 - A modern browser (Chrome, Edge, Safari, Firefox)
 - API keys and credentials (see Configuration)
+- Docker Engine running (local only) — required for sandboxed "safe" execution of generated code. If you opt out and force `unsafe` mode locally (see Configuration → Execution Mode), Docker is not required.
 
 ## Quick Start
 
@@ -144,6 +145,23 @@ Key features used in this project:
 - File: `src/ai_agentic_coder/gradio_ui.py`
 - You provide: `Requirements`, `Module Name` (without .py), `Class Name`.
 - The app displays a progress bar during execution and, on success, two URLs: a signed download URL and a live app URL.
+
+### Execution Mode (Docker vs non‑Docker)
+- Files: `src/ai_agentic_coder/crew.py`
+- Local runs use CrewAI `code_execution_mode="safe"`, executing generated code inside Docker for isolation.
+- On Hugging Face Spaces, the project automatically switches to `"unsafe"` mode (no Docker) for compatibility:
+  - See: `crew.py` — `is_running_in_hf_space()` and `run_in_docker = "unsafe" if is_running_in_hf_space() else "safe"`.
+  - Agents with code execution enabled inherit this setting: `backend_engineer`, `test_engineer` (see their `code_execution_mode=run_in_docker`).
+- Requirement: Ensure Docker is running when executing locally (see Quick Start step 0).
+- Opting out locally: If you don’t need Docker isolation on your machine, you can force non‑Docker execution by setting the variable unconditionally in `crew.py`:
+
+```python
+# src/ai_agentic_coder/crew.py
+# Force no Docker even on local runs
+run_in_docker = "unsafe"
+```
+
+This removes the need to have Docker running locally.
 
 ## Usage
 1. Open the app in your browser.
