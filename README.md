@@ -1,6 +1,6 @@
 # AI Agentic Coder
 
-[![Live Demo – Hugging Face Space](https://img.shields.io/badge/Live%20Demo-Hugging%20Face%20Space-yellow?logo=huggingface&logoColor=white)](https://huggingface.co/spaces/kaushikpaul/AI-Agentic-Coder)
+[![Live Website](https://img.shields.io/badge/Live_Website-6c63ff?logo=rocket&logoColor=white&labelColor=5a52d3)](https://projects.kaushikpaul.pp.ua/ai-agentic-coder)
 
 An AI-powered agentic coding assistant that:
 - Turns your natural language requirements into a working Python module
@@ -10,7 +10,7 @@ An AI-powered agentic coding assistant that:
 Backed by a multi-agent CrewAI pipeline, the app coordinates “engineering lead”, “backend”, “frontend”, “QA”, and a “runner” agent to deliver end-to-end results.
 
 ## Live Demo
-- Visit the hosted Space: https://huggingface.co/spaces/kaushikpaul/AI-Agentic-Coder
+- Visit the hosted Space: https://projects.kaushikpaul.pp.ua/ai-agentic-coder
 
 ## Features
 - **Idea → Running App in Minutes**
@@ -181,7 +181,7 @@ Generated files are saved under `src/ai_agentic_coder/output/`:
 - `gradio_public_url.txt` — A convenience file containing the live URL output
 
 ## Deployment
-- The project is already hosted on Hugging Face Spaces: https://huggingface.co/spaces/kaushikpaul/AI-Agentic-Coder
+- The project is already hosted on Hugging Face Spaces: https://projects.kaushikpaul.pp.ua/ai-agentic-coder
 - To deploy your own Space:
   - Set Space SDK to “Gradio” and point to `src/ai_agentic_coder/main.py` as the entry file.
   - Add required secrets in the Space settings:
