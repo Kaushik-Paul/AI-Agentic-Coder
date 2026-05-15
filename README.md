@@ -156,6 +156,7 @@ Key features used in this project:
 - File: `src/ai_agentic_coder/gradio_ui.py`
 - You provide: `Requirements`, `Module Name` (without .py), `Class Name`.
 - The app displays a progress bar during execution and, on success, two URLs: a signed download URL and a live app URL.
+- Generated demos are served through the main Gradio app at `/generated-app/`, which works on Hugging Face Spaces without relying on Gradio tunnel/share URLs.
 
 ### Execution Mode (Docker vs non‑Docker)
 - Files: `src/ai_agentic_coder/crew.py`
@@ -180,8 +181,8 @@ This removes the need to have Docker running locally.
 3. Enter a module name (e.g., `accounts`) and class name (e.g., `Account`).
 4. Click “Run AI Coder”.
 5. Wait a few minutes while the pipeline runs. When done, you’ll see:
-   - A signed Google Cloud Storage URL to download the generated artifacts as a zip
-   - A public/live URL of the generated Gradio demo app
+   - A 30-minute signed Google Cloud Storage URL to download the generated artifacts as a zip
+   - A live URL of the generated Gradio demo app, proxied through the main app
 
 ## Outputs
 Generated files are saved under `src/ai_agentic_coder/output/`:
@@ -189,7 +190,8 @@ Generated files are saved under `src/ai_agentic_coder/output/`:
 - `{module_name}.py` — The generated backend module
 - `app.py` — A minimal Gradio UI demonstrating the backend (launched with share=True)
 - `test_{module_name}` — Unit test module for the backend
-- `gradio_public_url.txt` — A convenience file containing the live URL output
+- `gradio_public_url.txt` — CrewAI task output containing the returned URLs
+- `latest_run_result.json` — Exact tool result used by the UI, so signed URL query parameters are preserved
 
 ## Deployment
 - The project is already hosted on Hugging Face Spaces: https://projects.kaushikpaul.co.in/ai-agentic-coder
@@ -209,9 +211,10 @@ Generated files are saved under `src/ai_agentic_coder/output/`:
 - **Missing or invalid API keys/credentials**
   - Verify `.env` values. Ensure the selected LLM provider key and GCP service key are valid; confirm bucket exists and is accessible.
 - **GCS upload errors**
-  - Confirm `GCP_SERVICE_KEY` contains a valid base64-encoded service account JSON with `storage.objects.create` permission.
+  - Confirm `GCP_SERVICE_KEY` contains a valid base64-encoded service account JSON with `storage.objects.create` and signing capability. The service account should also be able to access the target bucket.
 - **Live URL not detected**
-  - The runner waits up to 60 seconds to capture a public URL. If the generated UI didn’t enable `share=True` or the network blocks tunnels, you may see: “Gradio started but no accessible URL was detected within 60 seconds.” Re-run or check network settings.
+  - The generated preview is available at `/generated-app/` for `AI_AGENTIC_CODER_PREVIEW_TTL_MINUTES` minutes, defaulting to 30. A new run stops the previous preview and reuses the same route.
+  - If your app is behind a custom domain or proxy, set `AI_AGENTIC_CODER_BASE_URL` so returned preview links use the exact public origin.
 - **Virtualenv issues on Windows**
   - Use `.venv\Scripts\activate` and ensure `python` points to the venv interpreter.
 

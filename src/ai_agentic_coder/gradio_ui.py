@@ -2,6 +2,7 @@
 import gradio as gr
 
 from src.ai_agentic_coder.crewai_wrapper import run_crew_wrapper
+from src.ai_agentic_coder.preview_proxy import register_preview_proxy
 
 # Example configuration
 EXAMPLE_CONFIG = {
@@ -105,6 +106,7 @@ def create_interface():
                 buttons=["copy"],
                 elem_classes=["card"]
             )
+        with gr.Row():
             live_url_box = gr.Textbox(
                 label="Live App URL",
                 interactive=False,
@@ -173,5 +175,7 @@ def create_interface():
 
         # Ensure progress overlay renders reliably
         demo.queue()
+
+    register_preview_proxy(demo.app)
 
     return demo

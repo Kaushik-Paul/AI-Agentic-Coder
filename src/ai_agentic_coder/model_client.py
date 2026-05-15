@@ -14,7 +14,7 @@ OPENCODE_GO_ANTHROPIC_BASE_URL = "https://opencode.ai/zen/go"
 OPENCODE_GO_MODELS_URL = "https://opencode.ai/zen/go/v1/models"
 
 DEFAULT_OPENROUTER_MODEL = "moonshotai/kimi-k2:free"
-DEFAULT_OPENCODE_GO_MODEL = "minimax-m2.7"
+DEFAULT_OPENCODE_GO_MODEL = "deepseek-v4-flash"
 
 
 def _env_bool(name: str, default: bool = False) -> bool:

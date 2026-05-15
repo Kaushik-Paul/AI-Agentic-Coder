@@ -21,6 +21,7 @@ IGNORE_PATTERNS = [
     "src/ai_agentic_coder/output/app.py",
     "src/ai_agentic_coder/output/test_*.py",
     "src/ai_agentic_coder/output/*.txt",
+    "src/ai_agentic_coder/output/*.json",
     "src/ai_agentic_coder/output/*.zip",
     "src/**/__pycache__/**",
 ]
@@ -39,6 +40,7 @@ DELETE_PATTERNS = [
     "src/ai_agentic_coder/output/app.py",
     "src/ai_agentic_coder/output/test_*.py",
     "src/ai_agentic_coder/output/*.txt",
+    "src/ai_agentic_coder/output/*.json",
     "src/ai_agentic_coder/output/*.zip",
 ]
 

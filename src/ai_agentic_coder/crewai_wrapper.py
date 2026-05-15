@@ -4,19 +4,65 @@ import subprocess
 import time
 import threading
 import re
+import json
+import os
+from pathlib import Path
 import gradio as gr
 
 from src.ai_agentic_coder.crew import EngineeringTeam
+from src.ai_agentic_coder.tools.python_code_run_tool import RUN_RESULT_FILE
+
+
+OUTPUT_DIR = Path(__file__).resolve().parent / "output"
+
+
+def _run_result_path() -> Path:
+    return OUTPUT_DIR / RUN_RESULT_FILE
+
+
+def _clear_run_result() -> None:
+    try:
+        _run_result_path().unlink()
+    except FileNotFoundError:
+        pass
+
+
+def _load_run_result() -> dict[str, str]:
+    try:
+        data = json.loads(_run_result_path().read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+    return {
+        "download_url": str(data.get("download_url", "")),
+        "live_url": str(data.get("live_url", "")),
+    }
+
+
+def _set_base_url_from_request(request: gr.Request | None) -> None:
+    if request is None:
+        return
+
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host")
+    if not host:
+        return
+
+    proto = request.headers.get("x-forwarded-proto") or request.url.scheme or "http"
+    os.environ["AI_AGENTIC_CODER_BASE_URL"] = f"{proto}://{host}"
 
 def run_crew(requirements, module_name, class_name, progress=gr.Progress()):
     """Run the crew with the given inputs and return ONLY the raw result text."""
     try:
         # Kill any running processes from previous runs
-        subprocess.run(
-            ["pkill", "-f", "python.*src.ai_agentic_coder.output.app"],
-            stderr=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL
-        )
+        for pattern in (
+            "python.*src.ai_agentic_coder.output.app",
+            "python.*ai_agentic_coder.generated_app_runner",
+        ):
+            subprocess.run(
+                ["pkill", "-f", pattern],
+                stderr=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL
+            )
 
         inputs = {
             'requirements': requirements,
@@ -39,7 +85,10 @@ def run_crew(requirements, module_name, class_name, progress=gr.Progress()):
         return f"❌ Error: {str(e)}"
 
 # Generator function to manage state, progress, and output
-def run_crew_wrapper(requirements, module_name, class_name):
+def run_crew_wrapper(requirements, module_name, class_name, request: gr.Request | None = None):
+    _clear_run_result()
+    _set_base_url_from_request(request)
+
     progress = gr.Progress()
     # Immediately disable the button, show Output as progress area, and hide URL boxes
     yield (
@@ -102,6 +151,16 @@ def run_crew_wrapper(requirements, module_name, class_name):
         return
 
     raw_output = result_holder["output"] or ""
+    run_result = _load_run_result()
+
+    if run_result.get("download_url") and run_result.get("live_url"):
+        yield (
+            gr.update(value="", visible=False, label="Output"),
+            gr.update(value=run_result["download_url"], visible=True),
+            gr.update(value=run_result["live_url"], visible=True),
+            gr.update(interactive=True, value="Run AI Coder")
+        )
+        return
 
     # If the output looks like a failure (but no exception was thrown), treat it as an error
     failure_like = bool(re.search(r"\b(failed|failure|error|exception|traceback)\b", raw_output, re.IGNORECASE))
