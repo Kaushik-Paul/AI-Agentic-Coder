@@ -51,11 +51,10 @@ test_task:
 
 python_code_run_task:
   description: >  
-    Upload the zip to google cloud storage and run the python code that was generated
+    Upload the zip to Google Cloud Storage and run the Python code that was generated.
   expected_output: >
-    Signed public url of the zip that is uploaded in google cloud storage and the public url of gradle url 
-    that is started returned after running the tool.
-    IMPORTANT: tool returns both the url, so just return the output returned by the tool, without any additional text or formatting.
+    Signed URL of the zip uploaded to Google Cloud Storage and the live URL of the generated Gradio app.
+    IMPORTANT: The tool returns both URLs, so return the exact output returned by the tool without any additional text or formatting.
   agent: python_code_runner
   context:
     - code_task
