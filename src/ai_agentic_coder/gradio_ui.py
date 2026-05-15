@@ -24,7 +24,7 @@ EXAMPLE_CONFIG = {
 
 def create_interface():
     """Create and return the Gradio interface."""
-    with gr.Blocks(title="AI Agentic Coder", theme=gr.themes.Soft()) as demo:
+    with gr.Blocks(title="AI Agentic Coder") as demo:
         gr.HTML("""
         <div class="header">
             <div class="brand">AI Agentic Coder</div>
@@ -90,7 +90,7 @@ def create_interface():
                 label="Output",
                 interactive=False,
                 lines=20,
-                show_copy_button=True,
+                buttons=["copy"],
                 elem_classes=["card"],
                 visible=False,
                 elem_id="output-box"
@@ -102,14 +102,14 @@ def create_interface():
                 label="Download URL",
                 interactive=False,
                 visible=False,
-                show_copy_button=True,
+                buttons=["copy"],
                 elem_classes=["card"]
             )
             live_url_box = gr.Textbox(
                 label="Live App URL",
                 interactive=False,
                 visible=False,
-                show_copy_button=True,
+                buttons=["copy"],
                 elem_classes=["card"]
             )
 

@@ -3,6 +3,7 @@ import os
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 
+from .model_client import create_llm
 from .tools.python_code_run_tool import PythonCodeRunTool
 
 def is_running_in_hf_space() -> bool:
@@ -20,17 +21,24 @@ class EngineeringTeam():
     agents_config = 'config/agents.yaml'
     tasks_config = 'config/tasks.yaml'
 
+    def _agent_config(self, name: str) -> dict:
+        config = dict(self.agents_config[name])
+        config.pop("llm", None)
+        return config
+
     @agent
     def engineering_lead(self) -> Agent:
         return Agent(
-            config=self.agents_config['engineering_lead'],
+            config=self._agent_config('engineering_lead'),
+            llm=create_llm(),
             verbose=True,
         )
 
     @agent
     def backend_engineer(self) -> Agent:
         return Agent(
-            config=self.agents_config['backend_engineer'],
+            config=self._agent_config('backend_engineer'),
+            llm=create_llm(),
             verbose=True,
             allow_code_execution=True,
             code_execution_mode=run_in_docker,
@@ -41,14 +49,16 @@ class EngineeringTeam():
     @agent
     def frontend_engineer(self) -> Agent:
         return Agent(
-            config=self.agents_config['frontend_engineer'],
+            config=self._agent_config('frontend_engineer'),
+            llm=create_llm(),
             verbose=True,
         )
     
     @agent
     def test_engineer(self) -> Agent:
         return Agent(
-            config=self.agents_config['test_engineer'],
+            config=self._agent_config('test_engineer'),
+            llm=create_llm(),
             verbose=True,
             allow_code_execution=True,
             code_execution_mode=run_in_docker,
@@ -59,7 +69,8 @@ class EngineeringTeam():
     @agent
     def python_code_runner(self) -> Agent:
         return Agent(
-            config=self.agents_config['python_code_runner'],
+            config=self._agent_config('python_code_runner'),
+            llm=create_llm(),
             verbose=True,
             tools=[PythonCodeRunTool()],
         )
