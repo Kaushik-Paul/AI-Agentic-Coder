@@ -7,6 +7,7 @@ from huggingface_hub import HfApi
 SPACE_ID = os.getenv("HF_SPACE_ID", "kaushikpaul/AI-Agentic-Coder")
 
 ALLOW_PATTERNS = [
+    ".env.example",
     "README.md",
     "requirements.txt",
     "pyproject.toml",

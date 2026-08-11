@@ -1,0 +1,5 @@
+{
+  "download_url": "https://storage.googleapis.com/ai-agents-coder-project/ai-agentic-coder-20260515184520.zip?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=s3-read-write-service%40adept-fountain-349605.iam.gserviceaccount.com%2F20260515%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260515T184523Z&X-Goog-Expires=1800&X-Goog-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3D%22ai-agentic-coder-20260515184520.zip%22&X-Goog-Signature=888cfe50cb8f029a7fe7e49eeed977474ef040a531152c04eb1a06947957dcec2170f8e8e82c81c71213435407bdfecbbb06be0dafdb3887ef6c1801f9d671649a305ba55e051a6e39f280427f9c607757c93338cdaa7ac6896cef500460373a2e5db2cb9d8b8dcbbd15cac4a080cfde3ecdccca16e45a8644914c3e6cbd8c18799796f1f10d06c88f48ea734fa6a6a86fc02b7313e54c3249250e189ed13b8911dfe3c9ebd0c4c20d6f1cba10cbee17021da66448fa39cd12a18f25b2307c3bde090282a9da9dece2234b52ff7cce3ae75d7ef3313336352f0317c13b8e419b62720cd8b51ec79a6dd6a2dc44a6404c49be81e056acce446d3ec4f77006a585",
+  "live_url": "http://127.0.0.1:7860/generated-app/",
+  "expires_in_minutes": 30
+}
