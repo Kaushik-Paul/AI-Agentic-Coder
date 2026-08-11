@@ -9,15 +9,28 @@ import os
 from pathlib import Path
 import gradio as gr
 
-from src.ai_agentic_coder.crew import EngineeringTeam
-from src.ai_agentic_coder.tools.python_code_run_tool import RUN_RESULT_FILE
-
-
 OUTPUT_DIR = Path(__file__).resolve().parent / "output"
 
 
 def _run_result_path() -> Path:
+    from src.ai_agentic_coder.tools.python_code_run_tool import RUN_RESULT_FILE
+
     return OUTPUT_DIR / RUN_RESULT_FILE
+
+
+def _engineering_team():
+    from crewai.agent import Agent as CrewaiAgent
+    from src.ai_agentic_coder.crew import EngineeringTeam
+
+    if not getattr(CrewaiAgent, "_patched_skip_docker_validation", False):
+        def _skip_docker_validation(self):  # type: ignore[return-value]
+            """Override to bypass Docker validation entirely."""
+            return None
+
+        CrewaiAgent._validate_docker_installation = _skip_docker_validation  # type: ignore[method-assign]
+        CrewaiAgent._patched_skip_docker_validation = True  # type: ignore[attr-defined]
+
+    return EngineeringTeam()
 
 
 def _clear_run_result() -> None:
@@ -72,7 +85,7 @@ def run_crew(requirements, module_name, class_name, progress=gr.Progress()):
 
         # Baseline progress hints (wrapper controls real-time progress)
         progress(0.02, desc="Initializing crew...")
-        crew = EngineeringTeam().crew()
+        crew = _engineering_team().crew()
 
         progress(0.05, desc="Running crew...")
         result = crew.kickoff(inputs=inputs)
@@ -122,7 +135,7 @@ def run_crew_wrapper(requirements, module_name, class_name, request: gr.Request 
         pct = min(95, max(1, int((elapsed / total) * 95)))
         if pct != last_pct:
             # Overlay progress and textual progress in output box
-            progress(pct / 100.0, desc=f"AI is running hard")
+            progress(pct / 100.0, desc="AI is running hard")
             last_pct = pct
             bar_len = 24
             filled = int(bar_len * pct / 100)

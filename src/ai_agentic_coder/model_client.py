@@ -16,6 +16,7 @@ def _env_required(name: str) -> str:
 def create_llm() -> LLM:
     return LLM(
         model=_env_required("MODEL"),
+        provider="openai",
         api_base=_env_required("BASE_URL"),
         api_key=_env_required("API_KEY"),
         temperature=float(os.getenv("LLM_TEMPERATURE", "0.2")),

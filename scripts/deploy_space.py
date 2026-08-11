@@ -28,6 +28,7 @@ IGNORE_PATTERNS = [
 ]
 
 DELETE_PATTERNS = [
+    "src/ai_agentic_coder/event_loop_diagnostic.py",
     ".venv/**",
     "venv/**",
     "env/**",
