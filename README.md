@@ -1,3 +1,13 @@
+---
+title: AI-Agentic-Coder
+emoji: 🤖
+colorFrom: pink
+colorTo: yellow
+app_file: src/ai_agentic_coder/main.py
+sdk: gradio
+sdk_version: 6.14.0
+---
+
 # AI Agentic Coder
 
 [![Live Website](https://img.shields.io/badge/Live_Website-6c63ff?logo=rocket&logoColor=white&labelColor=5a52d3)](https://projects.kaushikpaul.co.in/ai-agentic-coder)
@@ -20,7 +30,7 @@ Backed by a multi-agent CrewAI pipeline, the app coordinates “engineering lead
 - **Production‑Friendly Reliability**
   - Built‑in retry limits and execution timeouts for coding/testing agents, plus automatic cleanup of previous app processes to avoid port conflicts.
 - **Model‑Flexible by Design**
-  - Switch between OpenRouter and OpenCode Go from `.env`. Models are configured with environment variables instead of hardcoded YAML values.
+  - Connect to any OpenAI-compatible endpoint using a base URL, API key, and model ID configured in `.env`.
 - **Modern Developer UX**
   - Polished Gradio UI with non‑blocking background execution, streaming progress, one‑click example loader, and strict URL extraction/validation on completion.
 - **Secure Artifact Delivery**
@@ -92,24 +102,21 @@ uv sync
 pip install -r requirements.txt
 ```
 
-### 4) Create a .env file
-Create a `.env` file in the project root with the following variables (adjust as needed):
+### 4) Create a `.env` file
+Copy the included example and replace the placeholder values:
+
+```bash
+cp .env.example .env
+```
+
+The model endpoint is configured with three required environment variables:
 
 ```ini
-# ——— LLM provider ———
-# Defaults to OpenCode Go when USE_OPENROUTER is false or omitted.
-USE_OPENROUTER=false
-OPENCODE_GO_API_KEY=your_opencode_go_key
-OPENCODE_GO_MODEL=minimax-m2.7
-# Optional: auto, openai, or anthropic. auto reads OpenCode Go model metadata and falls back safely.
-OPENCODE_GO_API_STYLE=auto
+BASE_URL=https://api.example.com/v1
+API_KEY=your_api_key
+MODEL=openai/your-model-id
 
-# To use OpenRouter instead:
-# USE_OPENROUTER=true
-# OPENROUTER_API_KEY=your_openrouter_key
-# OPENROUTER_MODEL=moonshotai/kimi-k2:free
-
-# Optional shared tuning:
+# Optional tuning
 LLM_TEMPERATURE=0.2
 LLM_TIMEOUT=300
 
@@ -145,8 +152,9 @@ Key features used in this project:
 
 ### LLMs and Agents
 - File: `src/ai_agentic_coder/model_client.py`
-- Provider selection is driven by `.env`: `USE_OPENROUTER=true` uses `OPENROUTER_MODEL`; otherwise the app uses OpenCode Go with `OPENCODE_GO_MODEL`.
-- OpenCode Go defaults to `minimax-m2.7`. The app checks OpenCode Go model metadata to choose the correct API style, so Anthropic-style models use `/messages` and OpenAI-compatible models use `/chat/completions`. You can override detection with `OPENCODE_GO_API_STYLE=openai` or `OPENCODE_GO_API_STYLE=anthropic`.
+- `BASE_URL`, `API_KEY`, and `MODEL` are required and are passed directly to CrewAI's `LLM` client.
+- `BASE_URL` must expose an OpenAI-compatible chat-completions API. `MODEL` is not rewritten; include any provider prefix required by CrewAI/LiteLLM (for example, `openai/your-model-id`).
+- `LLM_TEMPERATURE` and `LLM_TIMEOUT` are optional and default to `0.2` and `300` seconds.
 
 ### Tasks & Outputs
 - File: `src/ai_agentic_coder/config/tasks.yaml`
@@ -202,14 +210,13 @@ Generated files are saved under `src/ai_agentic_coder/output/`:
 - To deploy your own Space manually:
   - Set Space SDK to “Gradio” and point to `src/ai_agentic_coder/main.py` as the entry file.
   - Add required secrets in the Space settings:
-    - `USE_OPENROUTER`
-    - `OPENCODE_GO_API_KEY`, `OPENCODE_GO_MODEL` or `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`
+    - `BASE_URL`, `API_KEY`, `MODEL`
     - `GCP_PROJECT_ID`, `GCP_BUCKET_NAME`, `GCP_SERVICE_KEY` (base64-encoded service account JSON)
   - Ensure the Python version matches (3.10–3.12) and install via `requirements.txt` or `pyproject.toml`.
 
 ## Troubleshooting
 - **Missing or invalid API keys/credentials**
-  - Verify `.env` values. Ensure the selected LLM provider key and GCP service key are valid; confirm bucket exists and is accessible.
+  - Verify `BASE_URL`, `API_KEY`, and `MODEL` in `.env`. Ensure the endpoint is OpenAI-compatible and the model ID is valid for it. Also confirm the GCP service key and bucket configuration are valid.
 - **GCS upload errors**
   - Confirm `GCP_SERVICE_KEY` contains a valid base64-encoded service account JSON with `storage.objects.create` and signing capability. The service account should also be able to access the target bucket.
 - **Live URL not detected**
@@ -220,7 +227,7 @@ Generated files are saved under `src/ai_agentic_coder/output/`:
 
 ## Tech Stack
 - **Python**: 3.10–3.12
-- **Frameworks/Libraries**: CrewAI, Gradio 6, google-cloud-storage, python-dotenv, requests, httpx
+- **Frameworks/Libraries**: CrewAI, Gradio 6, google-cloud-storage, python-dotenv, httpx
 - **Orchestration**: YAML-configured agents and tasks via CrewAI
 - **UI**: Gradio Blocks with live progress and URL surfacing
 
