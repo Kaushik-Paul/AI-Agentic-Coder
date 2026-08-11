@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 import httpx
 from fastapi import Request, Response
@@ -10,7 +11,8 @@ from starlette.responses import RedirectResponse
 
 
 PREVIEW_PATH = os.getenv("AI_AGENTIC_CODER_PREVIEW_PATH", "/generated-app").rstrip("/") or "/generated-app"
-PREVIEW_PORT = int(os.getenv("AI_AGENTIC_CODER_PREVIEW_PORT", "7861"))
+DEFAULT_PREVIEW_PORT = int(os.getenv("AI_AGENTIC_CODER_PREVIEW_PORT", "8765"))
+PREVIEW_PORT_FILE = "generated_preview_port.txt"
 PREVIEW_API_PREFIXES = (
     "/gradio_api",
     "/queue",
@@ -19,6 +21,14 @@ PREVIEW_API_PREFIXES = (
     "/heartbeat",
     "/component_server",
 )
+
+
+def _preview_port() -> int:
+    port_file = Path(__file__).resolve().parent / "output" / PREVIEW_PORT_FILE
+    try:
+        return int(port_file.read_text(encoding="utf-8").strip())
+    except (FileNotFoundError, OSError, ValueError):
+        return DEFAULT_PREVIEW_PORT
 
 
 def _is_generated_app_request(request: Request) -> bool:
@@ -31,8 +41,9 @@ def _is_generated_app_api_request(request: Request) -> bool:
 
 
 async def _proxy_to_preview(request: Request, target_path: str) -> Response:
+    preview_port = _preview_port()
     target_path = target_path.lstrip("/")
-    target = f"http://127.0.0.1:{PREVIEW_PORT}/{target_path}"
+    target = f"http://127.0.0.1:{preview_port}/{target_path}"
     if request.url.query:
         target = f"{target}?{request.url.query}"
 
@@ -70,9 +81,9 @@ async def _proxy_to_preview(request: Request, target_path: str) -> Response:
     }
 
     location = response_headers.get("location")
-    if location and location.startswith(f"http://127.0.0.1:{PREVIEW_PORT}/"):
+    if location and location.startswith(f"http://127.0.0.1:{preview_port}/"):
         response_headers["location"] = location.replace(
-            f"http://127.0.0.1:{PREVIEW_PORT}",
+            f"http://127.0.0.1:{preview_port}",
             PREVIEW_PATH,
             1,
         )
@@ -105,3 +116,20 @@ def register_preview_proxy(app) -> None:
     methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"]
     app.add_api_route(PREVIEW_PATH, preview_root, methods=["GET"], include_in_schema=False)
     app.add_api_route(f"{PREVIEW_PATH}/{{path:path}}", proxy, methods=methods, include_in_schema=False)
+
+
+def install_preview_proxy() -> None:
+    """Ensure every Gradio-created FastAPI app includes the preview proxy."""
+    from gradio.routes import App
+
+    create_app = App.create_app
+    if getattr(create_app, "_ai_agentic_coder_preview_proxy", False):
+        return
+
+    def create_app_with_preview_proxy(*args, **kwargs):
+        app = create_app(*args, **kwargs)
+        register_preview_proxy(app)
+        return app
+
+    create_app_with_preview_proxy._ai_agentic_coder_preview_proxy = True
+    App.create_app = staticmethod(create_app_with_preview_proxy)

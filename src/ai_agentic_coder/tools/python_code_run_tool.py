@@ -1,13 +1,12 @@
 import sys
 import os
-import re
 import subprocess
 import time
-import select
 import json
 import base64
 import shutil
 import signal
+import socket
 import tempfile
 import threading
 import urllib.error
@@ -22,7 +21,8 @@ from google.oauth2 import service_account
 
 
 PREVIEW_PATH = os.getenv("AI_AGENTIC_CODER_PREVIEW_PATH", "/generated-app").rstrip("/") or "/generated-app"
-PREVIEW_PORT = int(os.getenv("AI_AGENTIC_CODER_PREVIEW_PORT", "7861"))
+PREVIEW_PORT = int(os.getenv("AI_AGENTIC_CODER_PREVIEW_PORT", "8765"))
+PREVIEW_PORT_FILE = "generated_preview_port.txt"
 RUN_RESULT_FILE = "latest_run_result.json"
 
 
@@ -58,6 +58,20 @@ def _preview_url() -> str:
     return f"{_base_url()}{PREVIEW_PATH}/"
 
 
+def _find_available_preview_port() -> int:
+    for port in range(PREVIEW_PORT, PREVIEW_PORT + 100):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as candidate:
+            try:
+                candidate.bind(("127.0.0.1", port))
+            except OSError:
+                continue
+            return port
+    raise RuntimeError(
+        f"No available generated-app port found in range "
+        f"{PREVIEW_PORT}-{PREVIEW_PORT + 99}."
+    )
+
+
 def _terminate_later(process: subprocess.Popen, ttl_seconds: int) -> None:
     def terminate() -> None:
         if process.poll() is not None:
@@ -76,16 +90,20 @@ def _terminate_later(process: subprocess.Popen, ttl_seconds: int) -> None:
     timer.start()
 
 
-def _wait_for_preview_server(process: subprocess.Popen, timeout_seconds: int = 60) -> bool:
+def _wait_for_preview_server(
+    process: subprocess.Popen,
+    preview_port: int,
+    timeout_seconds: int = 60,
+) -> bool:
     deadline = time.time() + timeout_seconds
-    url = f"http://127.0.0.1:{PREVIEW_PORT}/"
+    url = f"http://127.0.0.1:{preview_port}/"
     while time.time() < deadline:
         if process.poll() is not None:
             return False
         try:
             with urllib.request.urlopen(url, timeout=1):
                 return True
-        except (urllib.error.URLError, TimeoutError):
+        except (urllib.error.URLError, TimeoutError, OSError):
             time.sleep(0.5)
     return process.poll() is None
 
@@ -152,6 +170,10 @@ class PythonCodeRunTool(BaseTool):
         )
 
     def _run(self, argument: str) -> str:
+        output_dir = _output_dir()
+        preview_port = _find_available_preview_port()
+        (output_dir / PREVIEW_PORT_FILE).write_text(str(preview_port), encoding="utf-8")
+
         # First upload the code to GCP
         signed_url = self.upload_to_gcp()
 
@@ -164,18 +186,19 @@ class PythonCodeRunTool(BaseTool):
         env = os.environ.copy()
 
         # Path to /src/ai_agentic_coder/output so `accounts.py` is importable
-        output_dir = _output_dir()
-
         # Compose PYTHONPATH: [output_dir]:[project_src]:<existing>
         pythonpath_parts = [str(output_dir), str(project_src)]
         if env.get("PYTHONPATH"):
             pythonpath_parts.append(env["PYTHONPATH"])
         env["PYTHONPATH"] = os.pathsep.join(pythonpath_parts)
         env["GENERATED_GRADIO_APP_PATH"] = str(output_dir / "app.py")
-        env["GENERATED_GRADIO_PORT"] = str(PREVIEW_PORT)
+        env["GENERATED_GRADIO_PORT"] = str(preview_port)
         env["GENERATED_GRADIO_ROOT_PATH"] = PREVIEW_PATH
         env["GRADIO_ROOT_PATH"] = PREVIEW_PATH
         env["GRADIO_SHARE"] = "False"
+        # The generated app is an internal child server, not another HF Space.
+        # Leaving this marker set makes Gradio start a nested Spaces hot reloader.
+        env.pop("SYSTEM", None)
 
         # Construct the command to run the app as a module in unbuffered mode
         cmd = [sys.executable, "-u", "-m", module_path]
@@ -183,55 +206,33 @@ class PythonCodeRunTool(BaseTool):
         # Ensure the child Python interpreter uses unbuffered stdout/stderr
         env["PYTHONUNBUFFERED"] = "1"
 
-        print("Launching Gradio app... (this might take a few seconds)")
+        print(f"Launching Gradio app on preview port {preview_port}... (this might take a few seconds)")
 
         # Detach the Gradio server so it keeps running even after CrewAI finishes.
         # `start_new_session=True` puts the child in its own process group so it
         # won't receive a SIGINT/SIGTERM when the parent exits.
-        process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=1,
-            env=env,
-            start_new_session=True,
-        )
+        preview_log_path = Path(tempfile.gettempdir()) / "ai-agentic-coder-generated-preview.log"
+        with preview_log_path.open("w", encoding="utf-8") as preview_log:
+            process = subprocess.Popen(
+                cmd,
+                stdout=preview_log,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1,
+                env=env,
+                start_new_session=True,
+            )
 
         public_url = _preview_url()
-        local_url = None
-
-        start_time = time.time()
-        timeout = 60  # seconds
-
-        # Non-blocking read loop with timeout
-        while True:
-            remaining = timeout - (time.time() - start_time)
-            if remaining <= 0:
-                break
-
-            rlist, _, _ = select.select([process.stdout], [], [], remaining)
-            if not rlist:
-                break
-
-            line = process.stdout.readline().rstrip()
-            if line:
-                print(line)
-
-            # Fallback: capture local URL
-            m_local = re.search(r"http://127\.0\.0\.1:\d+", line)
-            if m_local and not local_url:
-                local_url = m_local.group(0)
-                break
-
-        if not local_url and not _wait_for_preview_server(process):
-            raise RuntimeError("Generated Gradio app exited before it became available.")
-
-        # Close our copy of stdout; the app keeps running detached.
-        try:
-            process.stdout.close()
-        except Exception:
-            pass
+        if not _wait_for_preview_server(process, preview_port):
+            try:
+                preview_log_tail = preview_log_path.read_text(encoding="utf-8")[-4000:].strip()
+            except OSError:
+                preview_log_tail = ""
+            details = f"\n{preview_log_tail}" if preview_log_tail else ""
+            raise RuntimeError(
+                f"Generated Gradio app exited before it became available.{details}"
+            )
 
         _terminate_later(process, _expiry_minutes() * 60)
         self.write_run_result(signed_url, public_url)

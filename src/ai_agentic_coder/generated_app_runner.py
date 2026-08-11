@@ -15,7 +15,7 @@ _LAUNCH_CALLED = False
 
 
 def _preview_port() -> int:
-    return int(os.getenv("GENERATED_GRADIO_PORT", "7861"))
+    return int(os.getenv("GENERATED_GRADIO_PORT", "8765"))
 
 
 def _root_path() -> str:

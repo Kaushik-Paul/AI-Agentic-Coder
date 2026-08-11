@@ -1,13 +1,3 @@
----
-title: AI-Agentic-Coder
-emoji: 🤖
-colorFrom: pink
-colorTo: yellow
-app_file: src/ai_agentic_coder/main.py
-sdk: gradio
-sdk_version: 6.14.0
----
-
 # AI Agentic Coder
 
 [![Live Website](https://img.shields.io/badge/Live_Website-6c63ff?logo=rocket&logoColor=white&labelColor=5a52d3)](https://projects.kaushikpaul.co.in/ai-agentic-coder)

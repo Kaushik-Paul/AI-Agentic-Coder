@@ -1,8 +1,30 @@
 #!/usr/bin/env python
+import asyncio
+
 import gradio as gr
+from gradio import queueing as gradio_queueing
+from gradio import utils as gradio_utils
 
 from src.ai_agentic_coder.crewai_wrapper import run_crew_wrapper
-from src.ai_agentic_coder.preview_proxy import register_preview_proxy
+from src.ai_agentic_coder.preview_proxy import install_preview_proxy
+
+
+def _loop_neutral_lock() -> asyncio.Lock:
+    """Create a Gradio lock without replacing the current event loop."""
+    return asyncio.Lock()
+
+
+def _loop_neutral_stop_event() -> asyncio.Event:
+    """Create a Gradio stop event without replacing the current event loop."""
+    return asyncio.Event()
+
+
+# Gradio 6.14 creates and installs a fresh event loop for every internal App
+# instance when no loop is running. Replacing those loops during startup causes
+# noisy BaseEventLoop destructor errors on Hugging Face Spaces/Python 3.12.
+gradio_utils.safe_get_lock = _loop_neutral_lock
+gradio_utils.safe_get_stop_event = _loop_neutral_stop_event
+gradio_queueing.safe_get_lock = _loop_neutral_lock
 
 # Example configuration
 EXAMPLE_CONFIG = {
@@ -25,6 +47,8 @@ EXAMPLE_CONFIG = {
 
 def create_interface():
     """Create and return the Gradio interface."""
+    install_preview_proxy()
+
     with gr.Blocks(title="AI Agentic Coder") as demo:
         gr.HTML("""
         <div class="header">
@@ -173,9 +197,7 @@ def create_interface():
         </script>
         """)
 
-        # Ensure progress overlay renders reliably
+        # Build the final queued app before attaching custom proxy routes.
         demo.queue()
-
-    register_preview_proxy(demo.app)
 
     return demo
